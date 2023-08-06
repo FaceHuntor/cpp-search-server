@@ -7,10 +7,12 @@
 #include <utility>
 #include <vector>
 #include <stdexcept>
+#include <numeric>
 
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const double PRECISION = 1e-6;
 
 string ReadLine() {
     string s;
@@ -126,7 +128,7 @@ public:
         auto result = FindAllDocuments(query, document_predicate);
         sort(result.begin(), result.end(),
              [](const Document& lhs, const Document& rhs) {
-                 if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+                 if (abs(lhs.relevance - rhs.relevance) < PRECISION) {
                      return lhs.rating > rhs.rating;
                  } else {
                      return lhs.relevance > rhs.relevance;
@@ -180,10 +182,7 @@ public:
     }
 
     int GetDocumentId(int index) const {
-        if (index < 0 || index >= static_cast<int>(doc_id_by_index_.size())){
-            throw out_of_range("");
-        }
-        return doc_id_by_index_[index];
+        return doc_id_by_index_.at(index);
     }
 
 private:
@@ -202,7 +201,7 @@ private:
 
     static bool EndsWithMinus(const string& word)
     {
-        return *word.rbegin() == '-';
+        return word.back() == '-';
     }
 
     static bool ContainsSpecSymbols(const string& word)
@@ -224,11 +223,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
-        return rating_sum / static_cast<int>(ratings.size());
+        return accumulate(ratings.begin(), ratings.end(), 0) / static_cast<int>(ratings.size());
     }
 
     struct QueryWord {
